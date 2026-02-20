@@ -1,0 +1,44 @@
+import { z } from 'zod';
+import { createEndpoint, Properties } from 'zite-integrations-backend-sdk';
+
+export default createEndpoint({
+  authenticated: true,
+  description: 'Fetches all properties for the logged-in landlord',
+  inputSchema: z.object({}),
+  outputSchema: z.object({
+    properties: z.array(z.object({
+      id: z.string(),
+      address: z.string().optional(),
+      city: z.string().optional(),
+      state: z.string().optional(),
+      postalCode: z.string().optional(),
+      setupStatus: z.string().optional(),
+      stripeAccountId: z.string().optional(),
+      monthlyRent: z.number().optional(),
+      securityDeposit: z.number().optional(),
+      createdAt: z.string().optional(),
+    })),
+  }),
+  execute: async ({ context }) => {
+    const { records } = await Properties.findAll({
+      filters: {
+        owner: context.user.id,
+      },
+    });
+
+    return {
+      properties: records.map(record => ({
+        id: record.id,
+        address: record.address,
+        city: record.city,
+        state: record.state,
+        postalCode: record.postalCode,
+        setupStatus: record.setupStatus,
+        stripeAccountId: record.stripeAccountId,
+        monthlyRent: record.monthlyRent,
+        securityDeposit: record.securityDeposit,
+        createdAt: record.createdAt,
+      })),
+    };
+  },
+});
